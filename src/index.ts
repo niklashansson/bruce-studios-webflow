@@ -1,3 +1,6 @@
+import './studios';
+import './tabs';
+
 import { greetUser } from '$utils/greet';
 
 window.Webflow ||= [];
