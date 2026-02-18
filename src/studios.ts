@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 import type { Map, MapOptions, Marker, Popup } from 'mapbox-gl';
-import mapboxgl from 'mapbox-gl';
+
+// Use global mapboxgl loaded via CDN (not bundled)
+const mapboxgl = window.mapboxgl as unknown as typeof import('mapbox-gl').default;
 
 import { getUserLocation } from '$utils/location';
 import {
@@ -15,12 +17,9 @@ import {
   type PointFeatureCollection,
 } from '$utils/mapbox';
 
-// ============================================================================
-// Configuration
-// ============================================================================
-
-const MAPBOX_ACCESS_TOKEN =
-  'MAPBOX_TOKEN_REMOVED';
+// Injected at build time from .env via esbuild define
+declare const __MAPBOX_ACCESS_TOKEN__: string;
+const MAPBOX_ACCESS_TOKEN = __MAPBOX_ACCESS_TOKEN__;
 const MAPBOX_STYLE = 'mapbox://styles/niklashansson/cmlextxil004n01r3d9gq7uzj';
 
 // Stockholm coordinates as default center
@@ -40,45 +39,28 @@ const FIT_BOUNDS_CONFIG = {
   maxZoom: 15,
 };
 
-// ============================================================================
-// Selectors - Unified data-map-* convention
-// ============================================================================
-
 // Helper to create data attribute selectors
-const mapElementAttr = (name: string) => `[data-map-element='${name}']`;
-const mapFieldAttr = (name: string) => `[data-map-field='${name}']`;
+const elementAttr = (name: string) => `[data-map-element='${name}']`;
+const fieldAttr = (name: string) => `[data-map-field='${name}']`;
 
 // All selectors in one place
 const S = {
-  // Finsweet CMS List (uses their convention)
-  list: mapElementAttr('list'),
-
-  // Location data fields within list items
-  lat: mapFieldAttr('lat'),
-  lng: mapFieldAttr('lng'),
-  id: mapFieldAttr('id'),
-
-  // Popup info
-  popupInfo: mapElementAttr('popup-info'),
-
-  // Templates
-  marker: mapElementAttr('marker'),
-  popup: mapElementAttr('popup'),
-  popupContent: mapElementAttr('popup-content'),
+  list: elementAttr('list'),
+  lat: fieldAttr('lat'),
+  lng: fieldAttr('lng'),
+  id: fieldAttr('id'),
+  popupInfo: elementAttr('popup-info'),
+  marker: elementAttr('marker'),
+  popup: elementAttr('popup'),
+  popupContent: elementAttr('popup-content'),
 } as const;
 
-// ============================================================================
-// Module State
-// ============================================================================
-
+// State
 let studiosMap: Map | null = null;
 let activePopup: Popup | null = null;
 let activeMarkers: Marker[] = [];
 
-// ============================================================================
 // Types
-// ============================================================================
-
 type LocationProperties = {
   id: string;
   description: string;
@@ -87,9 +69,7 @@ type LocationProperties = {
 type LocationFeature = PointFeature<LocationProperties>;
 type LocationsGeoJSON = PointFeatureCollection<LocationProperties>;
 
-// ============================================================================
 // GeoJSON Extraction
-// ============================================================================
 
 /**
  * Extracts location data from a list of HTMLElements and converts to GeoJSON format.
@@ -156,10 +136,6 @@ function extractLocationsFromCMS(): LocationsGeoJSON {
   return geoJSON;
 }
 
-// ============================================================================
-// Map Updates
-// ============================================================================
-
 /**
  * Updates the map with new location data.
  */
@@ -191,10 +167,6 @@ function updateMapLocations(locations: LocationsGeoJSON): void {
   console.log(`[Studios Map] Updated with ${locations.features.length} locations`);
 }
 
-// ============================================================================
-// Map Initialization
-// ============================================================================
-
 /**
  * Creates and configures a Mapbox GL map instance.
  */
@@ -225,10 +197,6 @@ function centerOnUserLocation(userCoords: [number, number]): void {
 
   console.log('[Studios Map] Centered on user location');
 }
-
-// ============================================================================
-// Markers & Popups
-// ============================================================================
 
 /**
  * Removes all existing markers from the map.
@@ -317,10 +285,6 @@ function addLocationMarkers(map: Map, locations: LocationsGeoJSON): void {
   });
 }
 
-// ============================================================================
-// Initialization
-// ============================================================================
-
 /**
  * Initializes the studios map with all locations from Webflow CMS.
  */
@@ -352,18 +316,14 @@ function initStudiosMap(): void {
   });
 }
 
-// ============================================================================
 // Webflow & Finsweet Integration
-// ============================================================================
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
   initStudiosMap();
 });
 
-// @ts-expect-error FinsweetAttributes type
 window.FinsweetAttributes = window.FinsweetAttributes || [];
-// @ts-expect-error FinsweetAttributes type
 window.FinsweetAttributes.push([
   'list',
   // @ts-expect-error FinsweetAttributes type

@@ -1,9 +1,9 @@
-import type { Map } from 'mapbox-gl';
-import { LngLatBounds } from 'mapbox-gl';
+import type { LngLatBounds as LngLatBoundsType, Map } from 'mapbox-gl';
 
-// ============================================================================
-// Types
-// ============================================================================
+// Use global mapboxgl loaded via CDN (not bundled)
+const { LngLatBounds } = window.mapboxgl as unknown as {
+  LngLatBounds: typeof LngLatBoundsType;
+};
 
 /**
  * A GeoJSON Point feature with custom properties.
@@ -24,10 +24,6 @@ export type PointFeatureCollection<T extends Record<string, unknown> = Record<st
   type: 'FeatureCollection';
   features: PointFeature<T>[];
 };
-
-// ============================================================================
-// Template Utilities
-// ============================================================================
 
 /**
  * Creates an HTML element from a Webflow template.
@@ -107,10 +103,6 @@ export function createPopupFromTemplate(
   return content;
 }
 
-// ============================================================================
-// Bounds & Zoom Utilities
-// ============================================================================
-
 /**
  * Calculates the bounding box that contains all features in a collection.
  *
@@ -119,7 +111,7 @@ export function createPopupFromTemplate(
  */
 export function calculateBoundsFromFeatures<T extends Record<string, unknown>>(
   features: PointFeature<T>[]
-): LngLatBounds | null {
+): LngLatBoundsType | null {
   if (features.length === 0) {
     return null;
   }
@@ -189,10 +181,6 @@ export function fitMapToFeatures<T extends Record<string, unknown>>(
   }
 }
 
-// ============================================================================
-// Style Injection
-// ============================================================================
-
 let popupStylesInjected = false;
 
 /**
@@ -224,10 +212,6 @@ export function injectPopupResetStyles(styleId = 'mapbox-popup-reset-styles'): v
   document.head.appendChild(styles);
   popupStylesInjected = true;
 }
-
-// ============================================================================
-// Default Marker Factory
-// ============================================================================
 
 /**
  * Creates a default circular marker element.

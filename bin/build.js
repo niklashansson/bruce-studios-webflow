@@ -1,13 +1,22 @@
 import * as esbuild from 'esbuild';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join, sep } from 'path';
+
+// Load .env file
+const envFile = readFileSync('.env', 'utf-8');
+for (const line of envFile.split('\n')) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) continue;
+  const [key, ...rest] = trimmed.split('=');
+  process.env[key] = rest.join('=');
+}
 
 // Config output
 const BUILD_DIRECTORY = 'dist';
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Config entrypoint files
-const ENTRY_POINTS = ['src/index.ts', 'src/studios.ts', 'src/tabs.ts'];
+const ENTRY_POINTS = ['src/index.ts', 'src/studios.ts'];
 
 // Config dev serving
 const LIVE_RELOAD = !PRODUCTION;
@@ -25,6 +34,8 @@ const context = await esbuild.context({
   inject: LIVE_RELOAD ? ['./bin/live-reload.js'] : undefined,
   define: {
     SERVE_ORIGIN: JSON.stringify(SERVE_ORIGIN),
+    // Inject environment variables at build time
+    __MAPBOX_ACCESS_TOKEN__: JSON.stringify(process.env.MAPBOX_ACCESS_TOKEN || ''),
   },
 });
 
