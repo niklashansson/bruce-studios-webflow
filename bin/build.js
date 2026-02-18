@@ -1,14 +1,16 @@
 import * as esbuild from 'esbuild';
-import { readdirSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join, sep } from 'path';
 
-// Load .env file
-const envFile = readFileSync('.env', 'utf-8');
-for (const line of envFile.split('\n')) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith('#')) continue;
-  const [key, ...rest] = trimmed.split('=');
-  process.env[key] = rest.join('=');
+// Load .env file if it exists (not present in CI — env vars are set by GitHub Actions)
+if (existsSync('.env')) {
+  const envFile = readFileSync('.env', 'utf-8');
+  for (const line of envFile.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const [key, ...rest] = trimmed.split('=');
+    process.env[key] = rest.join('=');
+  }
 }
 
 // Config output
